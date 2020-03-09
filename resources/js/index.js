@@ -69,6 +69,7 @@ class Game extends React.Component {
         this.state = {
             // solveIteration: 0,
             // isSolving: false,
+            initial: [],
             selected: [-1, -1],
             history: [{
                 squares: puzzle,
@@ -94,19 +95,23 @@ class Game extends React.Component {
                 history: history.concat([{
                     squares: squares,
                 }]),
-            },()=> console.log(this.state.history));
+            });
         }
     }
     play(){
         const history = this.state.history;
         const current = history[history.length - 1];
         const squares = JSON.parse(JSON.stringify(current.squares));
-        squares.map(arr => arr.map(cell => {if(cell.value){cell.initial=true; return cell}}))
+        squares.map((arr, i) => arr.map((cell, j) => {if(cell.value){cell.initial=true; cell.i = i; cell.j = j;
+            return cell}}))
+        let initial = squares.flat().filter(cell => cell.value != null)
+        console.log(initial)
         this.setState({
+            initial: initial,
             history: [{
                 squares: squares,
             }],
-        }, ()=>console.log(squares));
+        },()=> console.log(this.state.initial));
     }
     undo(){
         const history = this.state.history;
@@ -126,13 +131,21 @@ class Game extends React.Component {
         const history = this.state.history
         const current = history[0]
         const squares = JSON.parse(JSON.stringify(current.squares));
-
+        const initial = this.state.initial
+        for(let cell in initial){
+            let i = initial[cell].i;
+            let j = initial[cell].j;
+            if(findConflict(i, j, squares)){
+                 alert("NO SOLUTION POSSIBLE!");
+                return false;
+            }
+        }
         if(this.solvehelper(i, j, squares, 0)){
             this.setState({
                 history: [{
                     squares: squares,
                 }],
-            },() => console.log(this.state.history));
+            });
         }
         else{
             alert("No Solution!")
@@ -142,7 +155,7 @@ class Game extends React.Component {
     solvehelper(i, j, squares, depth){
         let next_i = i;
         let next_j = j;
-        if(depth == 81)
+        if(depth == 10)
             return true;
         if(next_j == 8){
             next_j = 0
@@ -152,10 +165,8 @@ class Game extends React.Component {
             next_j += 1
         }
         if(squares[i][j].initial){
-            if(!this.solvehelper(next_i, next_j, squares, depth+1)){
-                return false;
-            }
-            return true;
+            let bool = this.solvehelper(next_i, next_j, squares, depth+1)
+            return bool
         }
         for(let val = 1; val < 10; val++){
             squares[i][j].value = val;
@@ -172,7 +183,6 @@ class Game extends React.Component {
             }
         }
         return false;
-
     }
 
     reset(){
