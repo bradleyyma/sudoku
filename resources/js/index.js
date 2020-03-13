@@ -1,11 +1,7 @@
 // import React from 'react';
 // import ReactDOM from 'react-dom';
 // import '../css/index.css';
-const cell = {
-    value: null,
-    initial: false,
-};
-const puzzle = Array(9).fill(null).map(() => Array(9).fill(cell));
+
 function Square(props) {
     let classN = "square"
     if(props.isInitial){
@@ -21,19 +17,28 @@ function Square(props) {
 
 class Board extends React.Component {
   renderSquare(i, j, selected) {
-    // let style_name;
-    // if(selected){
-    //     style_name={
-    //         backgroundColor: '#cfc',
-    //     }
-    // }
+    let border = '2px solid #000'
+    if((j+1) % 3 == 0){
+        var right={ borderRight: border, }
+    }
+    else if(j % 3 == 0){
+        var left = { borderLeft: border,}
+    }
+    if((i+1) %3 == 0){
+        var bottom = { borderBottom: border,}
+    }
+    else if(i % 3 == 0){
+        var top = { borderTop: border,}
+    }
+    let style_name = Object.assign({}, right, left, bottom, top)
+
     return(
         <Square
             key={(i+j).toString()}
             value={this.props.squares[i][j].value}
             isInitial={this.props.squares[i][j].initial}
             onClick={() => this.props.onClickSelect(i, j)}
-            // style={style_name}
+            style={style_name}
             onKeyPress={() => this.props.onKeyPress(i, j, event.key)}
         />
     );
@@ -89,7 +94,11 @@ class Game extends React.Component {
         const current = history[history.length - 1];
         const squares = JSON.parse(JSON.stringify(current.squares));
         // const squares = current.squares.map(arr => arr.map(cell => cell)); //Deep copy
-        if(event >= '1' && event <= '9' && event != squares[i][j].value){
+        if(squares[i][j].initial == true)
+            return;
+        if(event < '1' && event > '9')
+            return;
+        if(event != squares[i][j].value){
             squares[i][j].value = event;
             this.setState({
                 history: history.concat([{
@@ -98,7 +107,7 @@ class Game extends React.Component {
             });
         }
     }
-    play(){
+    set(){
         const history = this.state.history;
         const current = history[history.length - 1];
         const squares = JSON.parse(JSON.stringify(current.squares));
@@ -124,9 +133,6 @@ class Game extends React.Component {
 
     }
 
-    // componentDidUpdate(){
-    //     if(solveIteration )
-    // }
     solve(i, j){
         const history = this.state.history
         const current = history[0]
@@ -155,7 +161,7 @@ class Game extends React.Component {
     solvehelper(i, j, squares, depth){
         let next_i = i;
         let next_j = j;
-        if(depth == 10)
+        if(depth == 81)
             return true;
         if(next_j == 8){
             next_j = 0
@@ -185,7 +191,7 @@ class Game extends React.Component {
         return false;
     }
 
-    reset(){
+    clear(){
         this.setState({
             // solveIteration: 0,
             // isSolving: false,
@@ -195,6 +201,16 @@ class Game extends React.Component {
             }],
         })
     }
+    play(){
+        let rand_index = Math.floor(Math.random() * boards.length)
+        console.log(rand_index)
+        let board = boards[rand_index].map(arr => arr.map(cell => { return {value: cell, initial: false};}))
+        this.setState({
+            history: [{
+                squares: board,
+            }],
+        }, ()=>this.set());
+    }
     render() {
 
         const history = this.state.history;
@@ -202,7 +218,6 @@ class Game extends React.Component {
         const squares = current.squares.slice();
 
         return (
-            <div className="">
             <div className="game">
                 <div className="game-board">
                     <Board
@@ -212,15 +227,19 @@ class Game extends React.Component {
                         onKeyPress={(i, j, event) => this.keyPress(i, j, event)}
                     />
                 </div>
+                <br/>
                 <div className="game-info">
                     <div>{/* status */}</div>
                     <ol>{/* TODO */}</ol>
                 </div>
-            </div>
-            <button className="btn btn-primary" onClick={()=>this.play()}>Play</button>
-            <button className="btn btn-primary" onClick={()=>this.undo()}>Undo</button>
-            <button className="" onClick={() => this.solve(0, 0)}>Solve</button>
-            <button className="" onClick={() => this.reset()}>Reset</button>
+                <br/>
+                <div className="menu">
+                    <button type="button" className="btn btn-primary" onClick={()=>this.set()}>Play</button>
+                    <button className="btn btn-primary" onClick={()=>this.undo()}>Undo</button>
+                    <button className="btn btn-secondary" onClick={() => this.solve(0, 0)}>Solve</button>
+                    <button className="btn btn-danger" onClick={() => this.clear()}>Clear</button>
+                    <button className="btn btn-primary" onClick={()=>this.play()}>Play Random Board</button>
+                </div>
             </div>
             );
     }
