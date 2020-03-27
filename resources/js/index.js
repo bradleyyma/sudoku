@@ -7,6 +7,9 @@ function Square(props) {
     if(props.isInitial){
         classN = "square default-square"
     }
+    if(props.highlight){
+        classN += " highlight"
+    }
     return (
       <button className={classN} onClick={props.onClick} value={props.value} style={props.style} onKeyPress={props.onKeyPress}
       >
@@ -16,7 +19,7 @@ function Square(props) {
 }
 
 class Board extends React.Component {
-  renderSquare(i, j, selected) {
+  renderSquare(i, j) {
     let border = '2px solid #000'
     if((j+1) % 3 == 0){
         var right={ borderRight: border, }
@@ -32,6 +35,15 @@ class Board extends React.Component {
     }
     let style_name = Object.assign({}, right, left, bottom, top)
 
+    //highlight rows/columns/3x3 square that relate to selected cell
+    let highlight
+    let top_row = Math.floor(this.props.selected[0] / 3) * 3;
+    let left_col = Math.floor(this.props.selected[1] / 3) * 3;
+    if(i == this.props.selected[0] || j == this.props.selected[1])
+        highlight = true
+    else if((i >= top_row && i < (top_row + 3)) && (j >= left_col && j < (left_col + 3)))
+        highlight = true
+
     return(
         <Square
             key={(i+j).toString()}
@@ -39,6 +51,7 @@ class Board extends React.Component {
             isInitial={this.props.squares[i][j].initial}
             onClick={() => this.props.onClickSelect(i, j)}
             style={style_name}
+            highlight={highlight}
             onKeyPress={() => this.props.onKeyPress(i, j, event.key)}
         />
     );
@@ -51,11 +64,7 @@ class Board extends React.Component {
       for(let i = 0; i < 9; i++){
           let row=[];
           for(let j = 0; j < 9; j++){
-              let selected = false;
-              if(i == this.props.selected[0] && j == this.props.selected[1]){
-                  selected = true;
-              }
-              row.push(this.renderSquare(i, j, selected));
+              row.push(this.renderSquare(i, j));
           }
           board.push(
               <div key={"row"+i} className="board-row">{row}</div>
@@ -141,8 +150,8 @@ class Game extends React.Component {
         for(let cell in initial){
             let i = initial[cell].i;
             let j = initial[cell].j;
-            if(findConflict(i, j, squares)){
-                 alert("NO SOLUTION POSSIBLE!");
+            if(findConflict(i, j, squares) != false){
+                alert("NO SOLUTION POSSIBLE!");
                 return false;
             }
         }
@@ -176,7 +185,7 @@ class Game extends React.Component {
         }
         for(let val = 1; val < 10; val++){
             squares[i][j].value = val;
-            if(findConflict(i, j, squares))
+            if(findConflict(i, j, squares) != false)
                 squares[i][j].value = null;
             else{
                 let bool = this.solvehelper(next_i, next_j, squares, depth+1);
@@ -247,12 +256,14 @@ class Game extends React.Component {
 
 function findConflict(i, j, squares){
     const value = squares[i][j].value;
+    const indexes = [[i, j]]
     let conflict = false;
     //check row
     for(let col = 0; col < 9; col++){
         if(col != j){
             if(squares[i][col].value == value){
                 conflict = true;
+                indexes.push([i, col])
             }
         }
     }
@@ -261,6 +272,7 @@ function findConflict(i, j, squares){
         if(row != i){
             if(squares[row][j].value == value){
                 conflict = true;
+                indexes.push([row, j])
             }
         }
     }
@@ -275,12 +287,16 @@ function findConflict(i, j, squares){
             if(row != i && col != j){
                 if(squares[row][col].value == value){
                     conflict = true;
+                    indexes.push([row, col])
                 }
             }
         }
     }
-
-    return conflict;
+    if(conflict)
+        return indexes
+    else {
+        return conflict
+    }
 
 }
 // ========================================

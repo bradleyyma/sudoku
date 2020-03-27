@@ -1,6 +1,7 @@
 body {
   font: 14px "Century Gothic", Futura, sans-serif;
   margin: 20px;
+  background-color: #222;
 }
 
 /* ol, ul {
@@ -42,7 +43,12 @@ body {
 }
 
 .square:focus {
-  background-color: #cfc;
+  background-color: #afa;
+  outline: none;
+}
+
+.highlight{
+    background-color: #dfd;
 }
 
 .kbd-navigation .square:focus {
@@ -51,7 +57,7 @@ body {
 
 .game{
     margin: auto;
-    outline: 4px solid red;
+    /* outline: 4px solid red; */
     width: 50%;
     height: auto;
 }
@@ -59,12 +65,14 @@ body {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  outline: 4px solid black;
+  /* outline: 4px solid black; */
   height: 100%;
 }
 
 .menu{
+    display: flex;
     margin: auto;
     width: 50%;
     text-align: center;
+    justify-content: space-between;
 }
